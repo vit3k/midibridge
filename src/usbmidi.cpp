@@ -11,11 +11,13 @@ namespace Usb {
     void Midi::update() {
         usb.Task();
         if (usb.getUsbTaskState() == USB_STATE_RUNNING) {
-            // do something
+            poll();
         }
     }
     void Midi::send(byte* data) {
-        midi->SendData(data);
+        if (usb.getUsbTaskState() == USB_STATE_RUNNING) {
+            midi->SendData(data);
+        }
     }
     void Midi::poll() {
         uint16_t bytesRcvd = 0;

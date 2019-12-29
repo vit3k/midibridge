@@ -44,4 +44,30 @@ namespace Ble {
         pServer->getAdvertising()->addServiceUUID(SERVICE_UUID);
         pServer->getAdvertising()->start();
     }
+
+    void Midi::send(uint8_t* data, uint8_t size)
+    {
+        if (size < 18)
+        {
+            uint8_t bleMsg[20] = {0x80, 0x80};
+            memcpy(bleMsg + 2, data, size);
+            pCharacteristic->setValue(bleMsg, size + 2);
+            pCharacteristic->notify();
+        }
+        else
+        {
+            uint8_t bleMsg[20] = {0x80, 0x80};
+            memcpy(bleMsg + 2, data, 18);
+            pCharacteristic->setValue(bleMsg, 20);
+            pCharacteristic->notify();
+            auto current = 18;
+            while(current < size) {
+                auto sizeCorrected = min(18, (int)size - current);
+                memcpy(bleMsg + 1, data + current, sizeCorrected);
+                current += sizeCorrected;
+                pCharacteristic->setValue(bleMsg, 19);
+                pCharacteristic->notify();
+            }
+        }
+    }
 }

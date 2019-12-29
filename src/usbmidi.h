@@ -3,7 +3,7 @@
 
 #include <usbhub.h>
 #include <usbh_midi.h>
-
+#define ENABLE_UHS_DEBUGGING 1
 namespace Usb {
 
     using MidiMessageCallback = void(*)(uint8_t*, uint8_t);

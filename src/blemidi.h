@@ -17,6 +17,7 @@ namespace Ble {
             BLECharacteristic* pCharacteristic;
         public:
             void setup(MidiMessageCallback callback);
+            void send(uint8_t* data, uint8_t size);
     };
 
     class MidiBLECallbacks: public BLECharacteristicCallbacks {
