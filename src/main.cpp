@@ -8,9 +8,11 @@
 #endif
 #include "usbmidi.h"
 #include "blemidi.h"
+#include "katana.h"
 
 Usb::Midi usbMidi;
 Ble::Midi bleMidi;
+Katana katana(usbMidi);
 
 #ifdef MIDI_DIN
 struct MidiSettings : public midi::DefaultSettings
@@ -68,27 +70,36 @@ void updateMidi()
 }
 #endif
 
-void OnUSBMidiMessage(uint8_t* data, uint8_t size) {
-  Utils::printHex(data, size);
-  bleMidi.send(data, size);
-  #ifdef MIDI_DIN
-  sendMidi(data, size);
-  #endif
-}
+class BLEMidiReceiver : public Ble::MidiMessageCallbackReceiver
+{
+  void receive(uint8_t* data, uint8_t size)
+  {
+    Utils::printHex(data, size);
+    usbMidi.send(data);
+    #ifdef MIDI_DIN
+    sendMidi(data, size);
+    #endif
+  }
+};
 
-void OnBLEMidiMessage(uint8_t* data, uint8_t size) {
-  Utils::printHex(data, size);
-  usbMidi.send(data);
-  #ifdef MIDI_DIN
-  sendMidi(data, size);
-  #endif
-}
+class USBMidiReciever : public Usb::MidiMessageCallbackReceiver
+{
+  void receive(uint8_t* data, uint8_t size)
+  {
+    Utils::printHex(data, size);
+    bleMidi.send(data, size);
+    #ifdef MIDI_DIN
+    sendMidi(data, size);
+    #endif
+  }
+};
 
 void setup() {
   Serial.begin(115200);
   usbMidi.setup();
-  usbMidi.registerCallback(OnUSBMidiMessage);
-  bleMidi.setup(OnBLEMidiMessage);
+  usbMidi.registerCallback(new USBMidiReciever());
+  bleMidi.setup(new BLEMidiReceiver());
+  katana.init();
   Serial.println("Setup completed");
 }
 

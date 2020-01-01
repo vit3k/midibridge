@@ -11,22 +11,21 @@
 
 namespace Ble {
     using MidiMessageCallback = void(*)(uint8_t*, uint8_t);
-
     class Midi {
         private:
             BLECharacteristic* pCharacteristic;
         public:
-            void setup(MidiMessageCallback callback);
+            void setup(MidiMessageCallbackReceiver* receiver);
             void send(uint8_t* data, uint8_t size);
     };
 
     class MidiBLECallbacks: public BLECharacteristicCallbacks {
-        MidiMessageCallback callback;
+        MidiMessageCallbackReceiver* receiver;
         BLEParser bleParser;
         void onWrite(BLECharacteristic *pCharacteristic);
         public:
-            MidiBLECallbacks(MidiMessageCallback callback) {
-                this->callback = callback;
+            MidiBLECallbacks(MidiMessageCallbackReceiver* receiver) {
+                this->receiver = receiver;
             }
     };
 }

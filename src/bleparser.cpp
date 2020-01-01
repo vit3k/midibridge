@@ -6,7 +6,7 @@ namespace Ble {
         return (value & (1 << bit)) != 0;
     }
 
-    void BLEParser::parseBLE(uint8_t* data, uint8_t dataSize, MidiMessageCallback callback) {
+    void BLEParser::parseBLE(uint8_t* data, uint8_t dataSize, MidiMessageCallbackReceiver* receiver) {
         uint8_t command;
         uint8_t channel;
         uint8_t data1;
@@ -29,7 +29,7 @@ namespace Ble {
                 if (isBitOn(data[currentIdx], 7)) {
                     // this is real time message
                     // MIDI.send(data[currentIdx]);
-                    callback(&data[currentIdx], 1);
+                    receiver->receive(&data[currentIdx], 1);
                 } else {
                     sysexData[sysexIdx++] = data[currentIdx];
                 }
@@ -44,7 +44,7 @@ namespace Ble {
                     case 0b1110: // 2 bytes of data
                         //data1 = data[currentIdx++];
                         //data2 = data[currentIdx++];
-                        callback(&data[currentIdx], 3);
+                        receiver->receive(&data[currentIdx], 3);
                         currentIdx += 3;
                         // MIDI.send(statusByte, data1, data2);
                         break;
@@ -52,7 +52,7 @@ namespace Ble {
                     case 0b1101: //1 byte of data
                         //data1 = data[currentIdx++];
                         // MIDI.send(statusByte, data1);
-                        callback(&data[currentIdx], 2);
+                        receiver->receive(&data[currentIdx], 2);
                         currentIdx += 2;
                         break;
                     case 0b1111: // system common or system real time
@@ -60,7 +60,7 @@ namespace Ble {
                             // system real time
                             // MIDI.send(statusByte);
                             Serial.printf("MIDI real time %x %x %d\n", data[currentIdx], channel, isBitOn(channel, 3));
-                            callback(&data[currentIdx], 1);
+                            receiver->receive(&data[currentIdx], 1);
                             currentIdx++;
                         } else {
                             // system common
@@ -79,7 +79,7 @@ namespace Ble {
                                     sysexData[sysexIdx] = data[currentIdx];
                                     sysexIdx++;
                                     Utils::printHex(sysexData, sysexIdx);
-                                    callback(sysexData, sysexIdx);
+                                    receiver->receive(sysexData, sysexIdx);
                                     sysexIdx = 0;
                                     currentIdx++;
                                     //Serial.printf("Sysex send");
@@ -89,13 +89,13 @@ namespace Ble {
                                     //data1 = data[currentIdx++];
                                     //data2 = data[currentIdx++];
                                     // MIDI.send(statusByte, data1, data2);
-                                    callback(&data[currentIdx], 3);
+                                    receiver->receive(&data[currentIdx], 3);
                                     currentIdx += 3;
                                     break;
                                 case 0b0001:
                                 case 0b0011: // 1 byte of data
                                     data1 = data[currentIdx++];
-                                    callback(&data[currentIdx], 2);
+                                    receiver->receive(&data[currentIdx], 2);
                                     currentIdx += 2;
                                     // MIDI.send(statusByte, data1);
                                     break;

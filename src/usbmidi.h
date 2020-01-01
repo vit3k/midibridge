@@ -7,7 +7,11 @@
 namespace Usb {
 
     using MidiMessageCallback = void(*)(uint8_t*, uint8_t);
-
+    class MidiMessageCallbackReceiver
+    {
+        public:
+            virtual void receive(uint8_t* data, uint8_t size) = 0;
+    };
     class USBH_MIDI_ext : public USBH_MIDI {
     public:
         byte port;
@@ -39,15 +43,19 @@ namespace Usb {
         USB usb;
         MidiSysEx sysEx;
         void poll();
-        MidiMessageCallback callback;
+        MidiMessageCallbackReceiver* receivers[4];
+        uint8_t callbackSize;
+        void callCallbacks(uint8_t* data, uint8_t size);
     public:
         Midi(): midi(new USBH_MIDI_ext(&usb)) {};
         ~Midi() { delete midi; }
         void setup();
         void update();
         void send(byte* data);
-        void registerCallback(MidiMessageCallback callback) { this->callback = callback; };
+        void registerCallback(MidiMessageCallbackReceiver* callback);
         byte getPort() { return midi->port; }
     };
+
+
 };
 #endif

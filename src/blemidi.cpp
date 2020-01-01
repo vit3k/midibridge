@@ -9,13 +9,13 @@ namespace Ble {
         Utils::printHex((byte*)value.data(), value.length());
         auto data = (uint8_t*)value.data();
         auto dataSize = value.length();
-        bleParser.parseBLE(data, dataSize, callback);
+        bleParser.parseBLE(data, dataSize, receiver);
         pCharacteristic->setValue(nullptr, 0);
         pCharacteristic->notify();
       }
     }
 
-    void Midi::setup(MidiMessageCallback callback) {
+    void Midi::setup(MidiMessageCallbackReceiver* receiver) {
         BLEDevice::init("MidiBridge");
         BLEDevice::setEncryptionLevel((esp_ble_sec_act_t)ESP_LE_AUTH_REQ_SC_BOND);
 
@@ -29,7 +29,7 @@ namespace Ble {
                                             BLECharacteristic::PROPERTY_WRITE_NR |
                                             BLECharacteristic::PROPERTY_NOTIFY
                                             );
-        pCharacteristic->setCallbacks(new MidiBLECallbacks(callback));
+        pCharacteristic->setCallbacks(new MidiBLECallbacks(receiver));
         pCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
 
         uint8_t init[2] = {0x80, 0x80};

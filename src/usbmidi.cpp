@@ -38,11 +38,11 @@ namespace Usb {
                 case MidiSysEx::nonsysex:
                     p++;
                     size = midi->lookupMsgSize(*p);
-                    callback(p, size);
+                    callCallbacks(p, size);
                     p += size;
                     break;
                 case MidiSysEx::done:
-                    callback(sysEx.get(), sysEx.getSize());
+                    callCallbacks(sysEx.get(), sysEx.getSize());
                     sysEx.clear();
                     break;
                 case MidiSysEx::overflow:
@@ -117,5 +117,18 @@ namespace Usb {
             rc = MidiSysEx::done;
         }
         return(rc);
+    }
+
+    void Midi::registerCallback(MidiMessageCallbackReceiver* callback)
+    {
+        receivers[callbackSize++] = callback;
+    }
+
+    void Midi::callCallbacks(uint8_t* data, uint8_t size)
+    {
+        for(auto i = 0; i < callbackSize; i++)
+        {
+            receivers[i]->receive(data, size);
+        }
     }
 }
